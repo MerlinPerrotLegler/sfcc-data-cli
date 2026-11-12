@@ -1,0 +1,18 @@
+{
+  "name": "sfcc-data-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "sfcc-data": "bin/sfcc-data",
+    "sfcc-data-mcp": "bin/sfcc-data-mcp.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/splitter.test.mjs test/apply-site-export.test.mjs test/layout.test.mjs test/keys.test.mjs test/project.test.mjs test/mcp.test.mjs test/prompt.test.mjs test/instances.test.mjs"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.12"
+  }
+}

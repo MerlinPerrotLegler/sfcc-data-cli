@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Choisit un Node >= 20.19. Le shebang du .mjs suivrait le `node` du PATH,
+# souvent encore un Node 16 dans un vieux terminal nvm.
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+ROOT="$(cd "$(dirname "$SOURCE")/.." && pwd)"
+
+node_ok() {
+  "$1" -e 'const p=process.versions.node.split(".").map(Number); if(!(p[0]>20||(p[0]===20&&p[1]>=19))) process.exit(1)' >/dev/null 2>&1
+}
+
+choose_node() {
+  if command -v node >/dev/null 2>&1 && node_ok node; then
+    command -v node
+    return
+  fi
+  local base="${NVM_DIR:-$HOME/.nvm}"
+  local alias="$base/alias/default"
+  if [[ -f "$alias" ]]; then
+    local name
+    name="$(tr -d '[:space:]' < "$alias")"
+    local candidate="$base/versions/node/v$name/bin/node"
+    if [[ -x "$candidate" ]] && node_ok "$candidate"; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  fi
+  local dir best=""
+  for dir in "$base/versions/node"/v*; do
+    [[ -x "$dir/bin/node" ]] || continue
+    if node_ok "$dir/bin/node"; then
+      best="$dir/bin/node"
+    fi
+  done
+  if [[ -n "$best" ]]; then
+    printf '%s\n' "$best"
+    return
+  fi
+  echo "sfcc-data requiert Node >= 20.19.0. Ce terminal utilise $(node -v 2>/dev/null || echo 'aucun node')." >&2
+  echo "nvm use 20" >&2
+  exit 1
+}
+
+exec "$(choose_node)" "$ROOT/bin/sfcc-data.mjs" "$@"
